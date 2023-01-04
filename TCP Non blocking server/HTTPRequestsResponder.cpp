@@ -13,10 +13,10 @@ HTTPRequestsResponder::eLanguage HTTPRequestsResponder::get_lang_query_param(str
 string HTTPRequestsResponder::create_path_to_file(string endpoint, eLanguage lang)
 {
 	string path_to_file;
-	string full_file_name = endpoint.substr(endpoint.find_last_of('/'));
+	string full_file_name = endpoint.substr(endpoint.find_last_of('/') + 1);
 	string file_name = full_file_name.find('.') != string::npos? full_file_name.substr(0, full_file_name.find('.')) : full_file_name;
 	string file_extension = full_file_name.find('.') != string::npos ? full_file_name.substr(full_file_name.find('.')) : "";
-	string relativ_file_position = endpoint.substr(0, endpoint.find_last_of('/'));
+	string relativ_file_position = endpoint.substr(0, endpoint.find_last_of('/') + 1);
 	std::replace(relativ_file_position.begin(), relativ_file_position.end(), '/', '\\');
 
 	switch (lang)
@@ -57,7 +57,7 @@ string HTTPRequestsResponder::get_body_from_file_and_update_status_and_type(stri
 
 string HTTPRequestsResponder::get_extention_to_content_type(string file_path)
 {
-	string file_extention = file_path.find('.') != string::npos ? file_path.substr(file_path.find('.')) : "";
+	string file_extention = file_path.find_last_of('.') != string::npos ? file_path.substr(file_path.find_last_of('.')) : "";
 	string content_type;
 
 	if (file_extention == ".html")
@@ -98,7 +98,7 @@ string HTTPRequestsResponder::set_status_404_and_get_404_content(string& respons
 	return file_content;
 }
 
-bool HTTPRequestsResponder::check_if_file_exist_and_not_dir(string file_path)
+bool HTTPRequestsResponder::check_if_file_exist(string file_path)
 {
 	ifstream file(file_path);
 	bool is_file_exist = file.is_open() && file.good();
@@ -118,6 +118,42 @@ string HTTPRequestsResponder::print_body_content_and_generate_response_body(stri
 	response_body = "the next lines were printed in the server's console:\n";
 	response_body += body_content;
 	
+	return response_body;
+}
+
+string HTTPRequestsResponder::create_or_replace_file_content_with_body_and_return_response_body(
+	string path_to_file, string request_body, string& response_status)
+{
+	string response_body;
+	string file_name = path_to_file.substr(path_to_file.find_last_of('\\') + 1);
+	string file_path = path_to_file.substr(0, path_to_file.find_last_of('\\') + 1);
+
+	//create dirs
+	try {
+		experimental::filesystem::create_directories(file_path);
+	}
+	catch (std::exception& e) {
+		cout << "couldent create dirs." << std::endl;
+	}
+
+	ifstream ifile(path_to_file);
+	if (ifile.is_open() && ifile.good()) // file exist
+		response_body = "File \"" + file_name + "\" in path \"" + file_path + "\" was modified to: \"" + request_body + "\"";
+	else // new file
+		response_body = "File \"" + file_name + "\" was created in path \"" + file_path + "\" with the content: \"" + request_body + "\"";
+	ifile.close();
+
+	ofstream file(path_to_file);
+	if (file.is_open() && file.good()) {
+		file << request_body;
+		file.close();
+		response_status = OK;
+	}
+	else {
+		response_body = "Problem with opening the file.";
+		response_status = SERVER_ERROR;
+	}
+
 	return response_body;
 }
 
@@ -165,7 +201,14 @@ string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestI
 			http_content_Type + "\n" + http_content_length + "\n\n";
 		break;
 	case eRequestType::PUT:
-
+		lang = get_lang_query_param(httpRequest.query_params);
+		path_to_file = create_path_to_file(httpRequest.endpoint, lang);
+		http_body = create_or_replace_file_content_with_body_and_return_response_body(
+			path_to_file, httpRequest.body, http_response_status);
+		http_content_Type += "text/plain";
+		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
+		generated_response = http_version + " " + http_response_status + "\n" +
+			http_content_Type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	case eRequestType::TRACE:
 
