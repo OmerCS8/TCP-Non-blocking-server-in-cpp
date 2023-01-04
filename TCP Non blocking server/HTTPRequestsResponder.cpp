@@ -164,13 +164,13 @@ string HTTPRequestsResponder::try_delete_file_and_get_response(string path_to_fi
 	else { // file exist
 		ifile.close();
 		if (remove(path_to_file.c_str()) == 0) {
-			response_status += OK;
+			response_status = OK;
 			content_type += "application / json";
 			response_body = "{\"success\":\"true\",\n\"deleted_file\":\"" + file_name + "\",\n\"path\":\"" + path + "\"}";
 		}
 		else
 		{
-			response_status += SERVER_ERROR;
+			response_status = SERVER_ERROR;
 			content_type += "application/json";
 			response_body = "{\"error\":\"File could not be deleted\"}";
 		}
@@ -190,6 +190,7 @@ string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestI
 	string http_content_type = "Content-Type: ";
 	string http_content_length = "Content-Length: ";
 	string http_body;
+	string http_allow = "Allow: GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS";
 
 	// temp variabels
 	string path_to_file;
@@ -249,10 +250,17 @@ string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestI
 			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	case eRequestType::OPTIONS:
-
+		http_response_status = OK;
+		http_content_length += "0";
+		generated_response = http_version + " " + http_response_status + "\n" + http_allow + "\n" + http_content_length + "\n\n";
 		break;
 	default:
-
+		http_response_status = NOT_IMPLEMENTED;
+		http_content_type += "text/plain";
+		http_body = "The requested method does not exist!";
+		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
+		generated_response = http_version + " " + http_response_status + "\n" +
+			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	}
 
