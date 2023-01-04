@@ -98,14 +98,6 @@ string HTTPRequestsResponder::set_status_404_and_get_404_content(string& respons
 	return file_content;
 }
 
-bool HTTPRequestsResponder::check_if_file_exist(string file_path)
-{
-	ifstream file(file_path);
-	bool is_file_exist = file.is_open() && file.good();
-	file.close();
-	return is_file_exist;
-}
-
 string HTTPRequestsResponder::print_body_content_and_generate_response_body(string body_content)
 {
 	cout << "\n**********************************************\n";
@@ -157,6 +149,36 @@ string HTTPRequestsResponder::create_or_replace_file_content_with_body_and_retur
 	return response_body;
 }
 
+string HTTPRequestsResponder::try_delete_file_and_get_response(string path_to_file, string& response_status, string& content_type)
+{
+	string response_body;
+	string file_name = path_to_file.substr(path_to_file.find_last_of('\\') + 1);
+	string path = path_to_file.substr(0, path_to_file.find_last_of('\\') + 1);
+	std::replace(path.begin(), path.end(), '\\', '/');
+
+	ifstream ifile(path_to_file);
+	if (!(ifile.is_open() && ifile.good())) // file does not exist
+	{
+		response_body = set_status_404_and_get_404_content(response_status, content_type);
+	}
+	else { // file exist
+		ifile.close();
+		if (remove(path_to_file.c_str()) == 0) {
+			response_status += OK;
+			content_type += "application / json";
+			response_body = "{\"success\":\"true\",\n\"deleted_file\":\"" + file_name + "\",\n\"path\":\"" + path + "\"}";
+		}
+		else
+		{
+			response_status += SERVER_ERROR;
+			content_type += "application/json";
+			response_body = "{\"error\":\"File could not be deleted\"}";
+		}
+	}
+
+	return response_body;
+}
+
 string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestInfo httpRequest)
 {
 	// returned response
@@ -165,7 +187,7 @@ string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestI
 	// response optional parts
 	string http_version = "HTTP/1.1";
 	string http_response_status;
-	string http_content_Type = "Content-Type: ";
+	string http_content_type = "Content-Type: ";
 	string http_content_length = "Content-Length: ";
 	string http_body;
 
@@ -179,42 +201,52 @@ string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestI
 	case eRequestType::GET:
 		lang = get_lang_query_param(httpRequest.query_params);
 		path_to_file = create_path_to_file(httpRequest.endpoint, lang);
-		http_body = get_body_from_file_and_update_status_and_type(path_to_file, http_response_status, http_content_Type);
+		http_body = get_body_from_file_and_update_status_and_type(path_to_file, http_response_status, http_content_type);
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
 		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_Type + "\n" + http_content_length + "\n\n" + http_body;
+			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	case eRequestType::POST:
 		http_body = print_body_content_and_generate_response_body(httpRequest.body);
 		http_response_status = OK;
-		http_content_Type += "text/plain";
+		http_content_type += "text/plain";
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
 		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_Type + "\n" + http_content_length + "\n\n" + http_body;
+			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	case eRequestType::HEAD:
 		lang = get_lang_query_param(httpRequest.query_params);
 		path_to_file = create_path_to_file(httpRequest.endpoint, lang);
-		http_body = get_body_from_file_and_update_status_and_type(path_to_file, http_response_status, http_content_Type);
+		http_body = get_body_from_file_and_update_status_and_type(path_to_file, http_response_status, http_content_type);
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
 		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_Type + "\n" + http_content_length + "\n\n";
+			http_content_type + "\n" + http_content_length + "\n\n";
 		break;
 	case eRequestType::PUT:
 		lang = get_lang_query_param(httpRequest.query_params);
 		path_to_file = create_path_to_file(httpRequest.endpoint, lang);
 		http_body = create_or_replace_file_content_with_body_and_return_response_body(
 			path_to_file, httpRequest.body, http_response_status);
-		http_content_Type += "text/plain";
+		http_content_type += "text/plain";
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
 		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_Type + "\n" + http_content_length + "\n\n" + http_body;
+			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	case eRequestType::TRACE:
-
+		http_response_status = OK;
+		http_content_type += "message/http";
+		http_body = httpRequest.full_request;
+		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
+		generated_response = http_version + " " + http_response_status + "\n" +
+			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	case eRequestType::DEL:
-
+		lang = get_lang_query_param(httpRequest.query_params);
+		path_to_file = create_path_to_file(httpRequest.endpoint, lang);
+		http_body = try_delete_file_and_get_response(path_to_file, http_response_status, http_content_type);
+		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
+		generated_response = http_version + " " + http_response_status + "\n" +
+			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	case eRequestType::OPTIONS:
 

@@ -28,10 +28,10 @@ private:
 	static string get_body_from_file_and_update_status_and_type(string path_to_file, string& response_status, string& content_type);
 	static string get_extention_to_content_type(string file_path);
 	static string set_status_404_and_get_404_content(string& response_status, string& content_type);
-	static bool check_if_file_exist(string file_path);
 	static string print_body_content_and_generate_response_body(string body_content);
 	static string create_or_replace_file_content_with_body_and_return_response_body(
 		string path_to_file, string request_body, string& response_status);
+	static string try_delete_file_and_get_response(string path_to_file, string& response_status, string& content_type);
 
 
 public:
