@@ -22,7 +22,7 @@ private:
 	static eLanguage get_lang_query_param(string query_params);
 	static string create_path_to_file(string endpoint, eLanguage lang);
 	static string get_body_from_file_and_return_status(string path_to_file, string& response_status);
-	static void print_body_content(string body_content);
+	static string print_body_content_and_generate_response_body(string body_content);
 
 public:
 	enum class eRequestType {

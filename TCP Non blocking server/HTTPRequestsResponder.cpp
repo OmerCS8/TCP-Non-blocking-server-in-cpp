@@ -65,13 +65,19 @@ string HTTPRequestsResponder::get_body_from_file_and_return_status(string path_t
 	return file_content;
 }
 
-void HTTPRequestsResponder::print_body_content(string body_content)
+string HTTPRequestsResponder::print_body_content_and_generate_response_body(string body_content)
 {
-	cout << "\n*****************************************\n";
+	cout << "\n**********************************************\n";
 	cout << "Post request body's content:";
-	cout << "\n-----------------------------------------\n";
+	cout << "\n----------------------------------------------\n";
 	cout << body_content;
-	cout << "\n*****************************************\n\n";
+	cout << "\n**********************************************\n\n";
+
+	string response_body;
+	response_body = "the next lines were printed in the server's console:\n";
+	response_body += body_content;
+	
+	return response_body;
 }
 
 string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestInfo httpRequest)
@@ -103,9 +109,12 @@ string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestI
 			http_content_Type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	case eRequestType::POST:
-		print_body_content(httpRequest.body);
-
-
+		http_body = print_body_content_and_generate_response_body(httpRequest.body);
+		http_response_status = OK;
+		http_content_Type += "text/plain";
+		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
+		generated_response = http_version + " " + http_response_status + "\n" +
+			http_content_Type + "\n" + http_content_length + "\n\n" + http_body;
 		break;
 	case eRequestType::HEAD:
 

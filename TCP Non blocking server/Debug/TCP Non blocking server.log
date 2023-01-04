@@ -1,2 +1,13 @@
 ﻿  HTTPRequestsResponder.cpp
-  TCP Non blocking server.vcxproj -> E:\git\TCP Non blocking server\Debug\TCP Non blocking server.exe
+  NonBlockingServerTCP.cpp
+E:\git\TCP-Non-blocking-server-in-cpp\TCP Non blocking server\NonBlockingServerTCP.cpp(253,24): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+E:\git\TCP-Non-blocking-server-in-cpp\TCP Non blocking server\NonBlockingServerTCP.cpp(298,5): warning C4305: 'argument': truncation from 'int' to 'const _Elem'
+          with
+          [
+              _Elem=char
+          ]
+E:\git\TCP-Non-blocking-server-in-cpp\TCP Non blocking server\NonBlockingServerTCP.cpp(298,82): warning C4309: 'argument': truncation of constant value
+  Program.cpp
+E:\git\TCP-Non-blocking-server-in-cpp\TCP Non blocking server\Program.cpp(4,1): warning C4326: return type of 'main' should be 'int' instead of 'void'
+  Generating Code...
+  TCP Non blocking server.vcxproj -> E:\git\TCP-Non-blocking-server-in-cpp\Debug\TCP Non blocking server.exe
