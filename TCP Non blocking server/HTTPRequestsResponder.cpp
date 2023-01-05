@@ -165,7 +165,7 @@ string HTTPRequestsResponder::try_delete_file_and_get_response(string path_to_fi
 		ifile.close();
 		if (remove(path_to_file.c_str()) == 0) {
 			response_status = OK;
-			content_type += "application / json";
+			content_type += "application/json";
 			response_body = "{\"success\":\"true\",\n\"deleted_file\":\"" + file_name + "\",\n\"path\":\"" + path + "\"}";
 		}
 		else
@@ -204,24 +204,24 @@ string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestI
 		path_to_file = create_path_to_file(httpRequest.endpoint, lang);
 		http_body = get_body_from_file_and_update_status_and_type(path_to_file, http_response_status, http_content_type);
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
-		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
+		generated_response = http_version + " " + http_response_status + "\r\n" +
+			http_content_type + "\r\n" + http_content_length + "\r\n\r\n" + http_body;
 		break;
 	case eRequestType::POST:
 		http_body = print_body_content_and_generate_response_body(httpRequest.body);
 		http_response_status = OK;
 		http_content_type += "text/plain";
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
-		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
+		generated_response = http_version + " " + http_response_status + "\r\n" +
+			http_content_type + "\r\n" + http_content_length + "\r\n\r\n" + http_body;
 		break;
 	case eRequestType::HEAD:
 		lang = get_lang_query_param(httpRequest.query_params);
 		path_to_file = create_path_to_file(httpRequest.endpoint, lang);
 		http_body = get_body_from_file_and_update_status_and_type(path_to_file, http_response_status, http_content_type);
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
-		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_type + "\n" + http_content_length + "\n\n";
+		generated_response = http_version + " " + http_response_status + "\r\n" +
+			http_content_type + "\r\n" + http_content_length + "\r\n\r\n";
 		break;
 	case eRequestType::PUT:
 		lang = get_lang_query_param(httpRequest.query_params);
@@ -230,37 +230,37 @@ string HTTPRequestsResponder::do_request_and_generate_http_response(HTTPRequestI
 			path_to_file, httpRequest.body, http_response_status);
 		http_content_type += "text/plain";
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
-		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
+		generated_response = http_version + " " + http_response_status + "\r\n" +
+			http_content_type + "\r\n" + http_content_length + "\r\n\r\n" + http_body;
 		break;
 	case eRequestType::TRACE:
 		http_response_status = OK;
 		http_content_type += "message/http";
 		http_body = httpRequest.full_request;
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
-		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
+		generated_response = http_version + " " + http_response_status + "\r\n" +
+			http_content_type + "\r\n" + http_content_length + "\r\n\r\n" + http_body;
 		break;
 	case eRequestType::DEL:
 		lang = get_lang_query_param(httpRequest.query_params);
 		path_to_file = create_path_to_file(httpRequest.endpoint, lang);
 		http_body = try_delete_file_and_get_response(path_to_file, http_response_status, http_content_type);
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
-		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
+		generated_response = http_version + " " + http_response_status + "\r\n" +
+			http_content_type + "\r\n" + http_content_length + "\r\n\r\n" + http_body;
 		break;
 	case eRequestType::OPTIONS:
 		http_response_status = OK;
 		http_content_length += "0";
-		generated_response = http_version + " " + http_response_status + "\n" + http_allow + "\n" + http_content_length + "\n\n";
+		generated_response = http_version + " " + http_response_status + "\r\n" + http_allow + "\r\n" + http_content_length + "\r\n\r\n";
 		break;
 	default:
 		http_response_status = NOT_IMPLEMENTED;
 		http_content_type += "text/plain";
 		http_body = "The requested method does not exist!";
 		http_content_length += http_body.empty() ? "0" : to_string(http_body.size());
-		generated_response = http_version + " " + http_response_status + "\n" +
-			http_content_type + "\n" + http_content_length + "\n\n" + http_body;
+		generated_response = http_version + " " + http_response_status + "\r\n" +
+			http_content_type + "\r\n" + http_content_length + "\r\n\r\n" + http_body;
 		break;
 	}
 
